@@ -4,27 +4,18 @@ import base64
 import io
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import subprocess
-try:
-    subprocess.run(['apt-get', 'install', '-y', 'fonts-dejavu-core'], 
-                   capture_output=True, timeout=30)
-except Exception:
-    pass
+
 app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_PATHS = [
-    '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
-    '/usr/share/fonts/truetype/freefont/FreeSerif.ttf',
-]
+FONT_PATH = os.path.join(os.path.dirname(__file__), 'Roboto-Regular.ttf')
 
 def get_font(size):
-    for fp in FONT_PATHS:
-        if os.path.exists(fp):
-            return ImageFont.truetype(fp, size)
-    return ImageFont.load_default()
+    try:
+        return ImageFont.truetype(FONT_PATH, size)
+    except Exception:
+        return ImageFont.load_default()
 
 def compose_image(photo_b64, main_text, sub_text, logo_b64):
     img_data = base64.b64decode(photo_b64)
