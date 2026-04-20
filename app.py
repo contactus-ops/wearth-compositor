@@ -9,17 +9,21 @@ app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_PATHS = [
-    '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
-    '/usr/share/fonts/truetype/freefont/FreeSerif.ttf',
-]
+FONT_URL = "https://github.com/google/fonts/raw/main/ofl/lora/Lora%5Bwght%5D.ttf"
+FONT_PATH = "/tmp/lora.ttf"
 
 def get_font(size):
-    for fp in FONT_PATHS:
-        if os.path.exists(fp):
-            return ImageFont.truetype(fp, size)
-    return ImageFont.load_default()
+    if not os.path.exists(FONT_PATH):
+        try:
+            r = requests.get(FONT_URL, timeout=15)
+            with open(FONT_PATH, 'wb') as f:
+                f.write(r.content)
+        except Exception:
+            return ImageFont.load_default()
+    try:
+        return ImageFont.truetype(FONT_PATH, size)
+    except Exception:
+        return ImageFont.load_default()
 
 def compose_image(photo_b64, main_text, sub_text, logo_b64):
     img_data = base64.b64decode(photo_b64)
@@ -59,11 +63,9 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         logo = Image.merge('RGBA', (r,g,b,a))
         final.paste(logo, (50, 50), logo)
 
-    # Main headline — large, bottom third, centered
     y_start = int(target_h * 0.72)
     font_main = get_font(88)
 
-    # Word wrap if text too wide
     words = main_text.split()
     lines = []
     current = []
@@ -97,7 +99,6 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         draw.text((x, y), line, font=font_main, fill=(255,255,255))
         y += line_height
 
-    # Tagline — smaller, below headline
     if sub_text:
         font_sub = get_font(42)
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
