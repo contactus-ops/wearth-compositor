@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_URL = "https://github.com/google/fonts/raw/main/ofl/lora/Lora%5Bwght%5D.ttf"
+FONT_URL = "https://fonts.gstatic.com/s/lora/v35/0QI6MX1D_JOxE7fSyjf6bg.ttf"
 FONT_PATH = "/tmp/lora.ttf"
 
 def get_font(size):
@@ -63,8 +63,8 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         logo = Image.merge('RGBA', (r,g,b,a))
         final.paste(logo, (50, 50), logo)
 
-    y_start = int(target_h * 0.72)
-    font_main = get_font(88)
+    y_start = int(target_h * 0.78)
+    font_main = get_font(64)
 
     words = main_text.split()
     lines = []
@@ -81,7 +81,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
     if current:
         lines.append(' '.join(current))
 
-    line_height = 100
+    line_height = 75
     total_text_h = len(lines) * line_height
     y = y_start - total_text_h // 2
 
@@ -100,11 +100,11 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         y += line_height
 
     if sub_text:
-        font_sub = get_font(42)
+        font_sub = get_font(32)
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
         tw2 = bbox2[2] - bbox2[0]
         x2 = (target_w - tw2) // 2
-        y2 = y + 30
+        y2 = y + 24
 
         shadow_img2 = Image.new('RGBA', (target_w, target_h), (0,0,0,0))
         sd2 = ImageDraw.Draw(shadow_img2)
