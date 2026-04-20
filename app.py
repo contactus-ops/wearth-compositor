@@ -10,7 +10,7 @@ app = Flask(__name__)
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
 FONT_URL = "https://fonts.gstatic.com/s/lora/v35/0QI6MX1D_JOxE7fSyjf6bg.ttf"
-FONT_PATH = "/tmp/lora.ttf"
+FONT_PATH = "/tmp/lora_v2.ttf"
 
 def get_font(size):
     if not os.path.exists(FONT_PATH):
@@ -64,7 +64,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         final.paste(logo, (50, 50), logo)
 
     y_start = int(target_h * 0.78)
-    font_main = get_font(64)
+    font_main = get_font(72)
 
     words = main_text.split()
     lines = []
@@ -81,7 +81,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
     if current:
         lines.append(' '.join(current))
 
-    line_height = 75
+    line_height = 85
     total_text_h = len(lines) * line_height
     y = y_start - total_text_h // 2
 
@@ -100,7 +100,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         y += line_height
 
     if sub_text:
-        font_sub = get_font(32)
+        font_sub = get_font(36)
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
         tw2 = bbox2[2] - bbox2[0]
         x2 = (target_w - tw2) // 2
