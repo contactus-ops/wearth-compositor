@@ -11,22 +11,9 @@ app = Flask(__name__)
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
 FONTS = [
-    os.path.join(os.path.dirname(__file__), 'Roboto-Regular.ttf'),
-    os.path.join(os.path.dirname(__file__), 'PlayfairDisplay-Regular.ttf'),
-    os.path.join(os.path.dirname(__file__), 'CormorantGaramond-Regular.ttf'),
+    (os.path.join(os.path.dirname(__file__), 'PlayfairDisplay-Regular.ttf'), 62),
+    (os.path.join(os.path.dirname(__file__), 'CormorantGaramond-Regular.ttf'), 72),
 ]
-
-def get_font(size):
-    font_path = random.choice(FONTS)
-    try:
-        return ImageFont.truetype(font_path, size)
-    except Exception:
-        for f in FONTS:
-            try:
-                return ImageFont.truetype(f, size)
-            except Exception:
-                continue
-        return ImageFont.load_default()
 
 def compose_image(photo_b64, main_text, sub_text, logo_b64):
     img_data = base64.b64decode(photo_b64)
@@ -66,8 +53,8 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         logo = Image.merge('RGBA', (r,g,b,a))
         final.paste(logo, (50, 50), logo)
 
-    # Pick one font for both headline and tagline
-    chosen_font_path = random.choice(FONTS)
+    chosen_font_path, chosen_size = random.choice(FONTS)
+
     def get_chosen(size):
         try:
             return ImageFont.truetype(chosen_font_path, size)
@@ -75,7 +62,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
             return ImageFont.load_default()
 
     y_start = int(target_h * 0.78)
-    font_main = get_chosen(62)
+    font_main = get_chosen(chosen_size)
 
     words = main_text.split()
     lines = []
@@ -111,7 +98,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         y += line_height
 
     if sub_text:
-        font_sub = get_chosen(32)
+        font_sub = get_chosen(int(chosen_size * 0.5))
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
         tw2 = bbox2[2] - bbox2[0]
         x2 = (target_w - tw2) // 2
