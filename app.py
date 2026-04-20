@@ -9,8 +9,8 @@ app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_URL = "https://fonts.gstatic.com/s/lora/v35/0QI6MX1D_JOxE7fSyjf6bg.ttf"
-FONT_PATH = "/tmp/lora_v2.ttf"
+FONT_URL = "https://github.com/cyrealtype/Lora-Cyrillic/raw/master/fonts/ttf/Lora-Regular.ttf"
+FONT_PATH = "/tmp/lora_v3.ttf"
 
 def get_font(size):
     if not os.path.exists(FONT_PATH):
