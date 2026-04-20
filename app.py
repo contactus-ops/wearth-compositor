@@ -3,19 +3,28 @@ import requests
 import base64
 import io
 import os
+import random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_PATH = os.path.join(os.path.dirname(__file__), 'Roboto-Regular.ttf')
+FONTS = [
+    os.path.join(os.path.dirname(__file__), 'Roboto-Regular.ttf'),
+    os.path.join(os.path.dirname(__file__), 'PlayfairDisplay-Regular.ttf'),
+]
 
 def get_font(size):
+    font_path = random.choice(FONTS)
     try:
-        return ImageFont.truetype(FONT_PATH, size)
+        return ImageFont.truetype(font_path, size)
     except Exception:
-        return ImageFont.load_default()
+        try:
+            other = [f for f in FONTS if f != font_path][0]
+            return ImageFont.truetype(other, size)
+        except Exception:
+            return ImageFont.load_default()
 
 def compose_image(photo_b64, main_text, sub_text, logo_b64):
     img_data = base64.b64decode(photo_b64)
@@ -56,7 +65,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         final.paste(logo, (50, 50), logo)
 
     y_start = int(target_h * 0.78)
-    font_main = get_font(70)
+    font_main = get_font(62)
 
     words = main_text.split()
     lines = []
@@ -73,7 +82,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
     if current:
         lines.append(' '.join(current))
 
-    line_height = 85
+    line_height = 78
     total_text_h = len(lines) * line_height
     y = y_start - total_text_h // 2
 
@@ -92,7 +101,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         y += line_height
 
     if sub_text:
-        font_sub = get_font(36)
+        font_sub = get_font(32)
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
         tw2 = bbox2[2] - bbox2[0]
         x2 = (target_w - tw2) // 2
