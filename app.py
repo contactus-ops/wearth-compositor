@@ -7,6 +7,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 app = Flask(__name__)
 
+IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
+
 FONT_PATHS = [
     '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
     '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
@@ -58,7 +60,6 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         final.paste(logo, (50, 50), logo)
 
     y_start = int(target_h * 0.70)
-
     font_main = get_font(52)
     bbox = draw.textbbox((0,0), main_text, font=font_main)
     tw = bbox[2] - bbox[0]
@@ -98,14 +99,32 @@ def health():
 def compose():
     try:
         data = request.json
+        photo_url = data.get('photo_url')
         photo_b64 = data.get('photo_base64')
         main_text = data.get('main_text', '')
         sub_text = data.get('sub_text', '')
         logo_b64 = data.get('logo_base64', '')
+
+        if photo_url and not photo_b64:
+            r = requests.get(photo_url, timeout=30)
+            r.raise_for_status()
+            photo_b64 = base64.b64encode(r.content).decode('utf-8')
+
         if not photo_b64:
-            return jsonify({'error': 'photo_base64 required'}), 400
+            return jsonify({'error': 'photo_url or photo_base64 required'}), 400
+
         result_b64 = compose_image(photo_b64, main_text, sub_text, logo_b64)
-        return jsonify({'image_base64': result_b64, 'status': 'success'})
+
+        if IMGBB_API_KEY:
+            resp = requests.post(
+                'https://api.imgbb.com/1/upload',
+                data={'key': IMGBB_API_KEY, 'image': result_b64}
+            )
+            url = resp.json()['data']['url']
+            return jsonify({'url': url, 'status': 'success'})
+        else:
+            return jsonify({'image_base64': result_b64, 'status': 'success'})
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
