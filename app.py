@@ -39,10 +39,10 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
 
     overlay = Image.new('RGBA', (target_w, target_h), (0,0,0,0))
     d = ImageDraw.Draw(overlay)
-    fade_start = int(target_h * 0.58)
+    fade_start = int(target_h * 0.52)
     fade_zone = target_h - fade_start
     for i in range(fade_zone):
-        alpha = int((i/fade_zone)**1.2 * 135)
+        alpha = int((i/fade_zone)**1.1 * 175)
         d.rectangle([(0, fade_start+i),(target_w, fade_start+i+1)], fill=(0,0,0,alpha))
 
     final = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
@@ -59,29 +59,56 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         logo = Image.merge('RGBA', (r,g,b,a))
         final.paste(logo, (50, 50), logo)
 
-    y_start = int(target_h * 0.70)
-    font_main = get_font(52)
-    bbox = draw.textbbox((0,0), main_text, font=font_main)
-    tw = bbox[2] - bbox[0]
-    x = (target_w - tw) // 2
-    shadow_img = Image.new('RGBA', (target_w, target_h), (0,0,0,0))
-    sd = ImageDraw.Draw(shadow_img)
-    sd.text((x, y_start), main_text, font=font_main, fill=(0,0,0,160))
-    shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(3))
-    final = Image.alpha_composite(final.convert('RGBA'), shadow_img).convert('RGB')
-    draw = ImageDraw.Draw(final)
-    draw.text((x, y_start), main_text, font=font_main, fill=(255,255,255))
+    # Main headline — large, bottom third, centered
+    y_start = int(target_h * 0.72)
+    font_main = get_font(88)
 
+    # Word wrap if text too wide
+    words = main_text.split()
+    lines = []
+    current = []
+    for word in words:
+        test = ' '.join(current + [word])
+        bbox = draw.textbbox((0,0), test, font=font_main)
+        if bbox[2] - bbox[0] > target_w - 120:
+            if current:
+                lines.append(' '.join(current))
+            current = [word]
+        else:
+            current.append(word)
+    if current:
+        lines.append(' '.join(current))
+
+    line_height = 100
+    total_text_h = len(lines) * line_height
+    y = y_start - total_text_h // 2
+
+    for line in lines:
+        bbox = draw.textbbox((0,0), line, font=font_main)
+        tw = bbox[2] - bbox[0]
+        x = (target_w - tw) // 2
+
+        shadow_img = Image.new('RGBA', (target_w, target_h), (0,0,0,0))
+        sd = ImageDraw.Draw(shadow_img)
+        sd.text((x+3, y+3), line, font=font_main, fill=(0,0,0,180))
+        shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(4))
+        final = Image.alpha_composite(final.convert('RGBA'), shadow_img).convert('RGB')
+        draw = ImageDraw.Draw(final)
+        draw.text((x, y), line, font=font_main, fill=(255,255,255))
+        y += line_height
+
+    # Tagline — smaller, below headline
     if sub_text:
-        font_sub = get_font(28)
+        font_sub = get_font(42)
         bbox2 = draw.textbbox((0,0), sub_text, font=font_sub)
         tw2 = bbox2[2] - bbox2[0]
         x2 = (target_w - tw2) // 2
-        y2 = y_start + 72
+        y2 = y + 30
+
         shadow_img2 = Image.new('RGBA', (target_w, target_h), (0,0,0,0))
         sd2 = ImageDraw.Draw(shadow_img2)
-        sd2.text((x2, y2), sub_text, font=font_sub, fill=(0,0,0,120))
-        shadow_img2 = shadow_img2.filter(ImageFilter.GaussianBlur(2))
+        sd2.text((x2+2, y2+2), sub_text, font=font_sub, fill=(0,0,0,140))
+        shadow_img2 = shadow_img2.filter(ImageFilter.GaussianBlur(3))
         final = Image.alpha_composite(final.convert('RGBA'), shadow_img2).convert('RGB')
         draw = ImageDraw.Draw(final)
         draw.text((x2, y2), sub_text, font=font_sub, fill=(235,230,220))
