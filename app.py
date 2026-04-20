@@ -4,7 +4,12 @@ import base64
 import io
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-
+import subprocess
+try:
+    subprocess.run(['apt-get', 'install', '-y', 'fonts-dejavu-core'], 
+                   capture_output=True, timeout=30)
+except Exception:
+    pass
 app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
