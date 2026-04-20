@@ -9,21 +9,17 @@ app = Flask(__name__)
 
 IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY', '')
 
-FONT_URL = "https://github.com/cyrealtype/Lora-Cyrillic/raw/master/fonts/ttf/Lora-Regular.ttf"
-FONT_PATH = "/tmp/lora_v3.ttf"
+FONT_PATHS = [
+    '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
+    '/usr/share/fonts/truetype/freefont/FreeSerif.ttf',
+]
 
 def get_font(size):
-    if not os.path.exists(FONT_PATH):
-        try:
-            r = requests.get(FONT_URL, timeout=15)
-            with open(FONT_PATH, 'wb') as f:
-                f.write(r.content)
-        except Exception:
-            return ImageFont.load_default()
-    try:
-        return ImageFont.truetype(FONT_PATH, size)
-    except Exception:
-        return ImageFont.load_default()
+    for fp in FONT_PATHS:
+        if os.path.exists(fp):
+            return ImageFont.truetype(fp, size)
+    return ImageFont.load_default()
 
 def compose_image(photo_b64, main_text, sub_text, logo_b64):
     img_data = base64.b64decode(photo_b64)
@@ -64,7 +60,7 @@ def compose_image(photo_b64, main_text, sub_text, logo_b64):
         final.paste(logo, (50, 50), logo)
 
     y_start = int(target_h * 0.78)
-    font_main = get_font(72)
+    font_main = get_font(70)
 
     words = main_text.split()
     lines = []
